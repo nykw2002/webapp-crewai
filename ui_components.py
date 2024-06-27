@@ -2,9 +2,23 @@ import streamlit as st
 from utils import save_to_knowledge_base, delete_from_knowledge_base, get_knowledge_base_files
 from config import KNOWLEDGE_BASE_DIR
 
+import streamlit as st
+from utils import save_to_knowledge_base, delete_from_knowledge_base, get_knowledge_base_files
+from config import KNOWLEDGE_BASE_DIR
+
 def setup_ui():
     load_custom_css()
     st.sidebar.markdown('<h1 class="futuristic-title">Procesor de Documente pentru Licitații</h1>', unsafe_allow_html=True)
+    
+    # Initialize session state for agent configurations if it doesn't exist
+    if 'agent_configs' not in st.session_state:
+        st.session_state.agent_configs = {
+            "Manager": {"instructions": "", "backstory": ""},
+            "Cercetător": {"instructions": "", "backstory": ""},
+            "Scriitor": {"instructions": "", "backstory": ""},
+            "Analist": {"instructions": "", "backstory": ""},
+            "Expert Financiar": {"instructions": "", "backstory": ""}
+        }
     
     initial_prompt = st.sidebar.text_area("Introduceți promptul inițial despre licitație:", height=150, key="initial_prompt_input")
     uploaded_file = st.sidebar.file_uploader("Încărcați un fișier pentru această sesiune (opțional)", type=["txt", "pdf"], key="file_uploader")
@@ -29,34 +43,28 @@ def setup_ui():
 
     # Agent customization
     st.sidebar.markdown('<p class="futuristic-input">Personalizare Agenți</p>', unsafe_allow_html=True)
-    agent_configs = {}
     agent_names = ["Manager", "Cercetător", "Scriitor", "Analist", "Expert Financiar"]
     for agent_name in agent_names:
         with st.sidebar.expander(f"Configurare {agent_name}"):
-            instructions = st.text_area(
+            st.session_state.agent_configs[agent_name]["instructions"] = st.text_area(
                 f"Instrucțiuni {agent_name}", 
-                value=st.session_state.get(f"{agent_name}_instructions", ""),
+                value=st.session_state.agent_configs[agent_name]["instructions"],
                 key=f"{agent_name}_instructions_input",
                 max_chars=500  # Limit the length of instructions
             )
-            backstory = st.text_area(
+            st.session_state.agent_configs[agent_name]["backstory"] = st.text_area(
                 f"Povestea {agent_name}", 
-                value=st.session_state.get(f"{agent_name}_backstory", ""),
+                value=st.session_state.agent_configs[agent_name]["backstory"],
                 key=f"{agent_name}_backstory_input",
                 max_chars=500  # Limit the length of backstory
             )
-            agent_configs[agent_name] = {"instructions": instructions, "backstory": backstory}
 
     save_config = st.sidebar.button("Salvează Configurările Agenților", key="save_config_button")
 
     if save_config:
-        for name, config in agent_configs.items():
-            # Sanitize and truncate the input before storing
-            st.session_state[f"{name}_instructions"] = config["instructions"][:500].encode('ascii', 'ignore').decode()
-            st.session_state[f"{name}_backstory"] = config["backstory"][:500].encode('ascii', 'ignore').decode()
         st.sidebar.success("Configurările au fost salvate cu succes!")
 
-    return initial_prompt, uploaded_file, agent_configs, save_config
+    return initial_prompt, uploaded_file, st.session_state.agent_configs, save_config
 
 def display_result(result):
     st.markdown('<p class="futuristic-title">Rezultatul Procesării</p>', unsafe_allow_html=True)

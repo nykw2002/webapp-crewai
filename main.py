@@ -9,6 +9,7 @@ load_dotenv()
 
 def main():
     st.set_page_config(page_title="Procesor de Documente pentru Licitații", layout="wide")
+    load_custom_css()
     
     initial_prompt, uploaded_file, agent_configs, save_config = setup_ui()
 
