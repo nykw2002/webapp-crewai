@@ -8,21 +8,21 @@ from config import KNOWLEDGE_BASE_DIR
 load_dotenv()
 
 def main():
-    st.set_page_config(page_title="Procesor de Documente pentru Licitații", layout="wide")
-    initial_prompt, uploaded_file, agent_configs, save_config = setup_ui()
+    try:
+        st.set_page_config(page_title="Procesor de Documente pentru Licitații", layout="wide")
+        initial_prompt, uploaded_file, agent_configs, save_config = setup_ui()
 
-    if save_config:
-        for name, config in agent_configs.items():
-            st.session_state[f"{name}_instructions"] = config["instructions"]
-            st.session_state[f"{name}_backstory"] = config["backstory"]
-        st.sidebar.success("Configurările au fost salvate cu succes!")
+        if save_config:
+            for name, config in agent_configs.items():
+                st.session_state[f"{name}_instructions"] = config["instructions"]
+                st.session_state[f"{name}_backstory"] = config["backstory"]
+            st.sidebar.success("Configurările au fost salvate cu succes!")
 
-    if st.sidebar.button("Procesează", key="process"):
-        if not initial_prompt:
-            st.error("Vă rugăm să introduceți un prompt inițial.")
-        else:
-            with st.spinner("Se procesează..."):
-                try:
+        if st.sidebar.button("Procesează", key="process"):
+            if not initial_prompt:
+                st.error("Vă rugăm să introduceți un prompt inițial.")
+            else:
+                with st.spinner("Se procesează..."):
                     manager, crew = create_agents_and_crew(agent_configs)
                     input_data = initial_prompt
                     file_summary = ""
@@ -37,8 +37,9 @@ def main():
                     result = crew.process(input_data, knowledge_base_used, file_summary)
                     display_result(result)
 
-                except Exception as e:
-                    st.error(f"A apărut o eroare: {str(e)}")
+    except Exception as e:
+        st.error(f"A apărut o eroare: {str(e)}")
+        st.exception(e)
 
 if __name__ == "__main__":
     main()

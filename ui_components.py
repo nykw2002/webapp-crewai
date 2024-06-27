@@ -45,7 +45,6 @@ def setup_ui():
             agent_configs[agent_name] = {"instructions": instructions, "backstory": backstory}
 
     save_config = st.sidebar.button("Salvează Configurările Agenților", key="save_config")
-
     return initial_prompt, uploaded_file, agent_configs, save_config
 
 def display_result(result):
