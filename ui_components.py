@@ -44,13 +44,9 @@ def setup_ui():
             )
             agent_configs[agent_name] = {"instructions": instructions, "backstory": backstory}
 
-    if st.sidebar.button("Salvează Configurările Agenților", key="save_config"):
-        for name, config in agent_configs.items():
-            st.session_state[f"{name}_instructions"] = config["instructions"]
-            st.session_state[f"{name}_backstory"] = config["backstory"]
-        st.sidebar.success("Configurările au fost salvate cu succes!")
+    save_config = st.sidebar.button("Salvează Configurările Agenților", key="save_config")
 
-    return initial_prompt, uploaded_file, agent_configs
+    return initial_prompt, uploaded_file, agent_configs, save_config
 
 def display_result(result):
     st.markdown('<p class="futuristic-title">Rezultatul Procesării</p>', unsafe_allow_html=True)

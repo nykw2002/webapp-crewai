@@ -9,7 +9,13 @@ load_dotenv()
 
 def main():
     st.set_page_config(page_title="Procesor de Documente pentru Licitații", layout="wide")
-    initial_prompt, uploaded_file, agent_configs = setup_ui()
+    initial_prompt, uploaded_file, agent_configs, save_config = setup_ui()
+
+    if save_config:
+        for name, config in agent_configs.items():
+            st.session_state[f"{name}_instructions"] = config["instructions"]
+            st.session_state[f"{name}_backstory"] = config["backstory"]
+        st.sidebar.success("Configurările au fost salvate cu succes!")
 
     if st.sidebar.button("Procesează", key="process"):
         if not initial_prompt:
