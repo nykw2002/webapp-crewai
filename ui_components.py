@@ -3,11 +3,10 @@ from utils import save_to_knowledge_base, delete_from_knowledge_base, get_knowle
 from config import KNOWLEDGE_BASE_DIR
 
 def setup_ui():
-    load_custom_css()
     st.sidebar.markdown('<h1 class="futuristic-title">Procesor de Documente pentru Licitații</h1>', unsafe_allow_html=True)
     
-    st.session_state.initial_prompt = st.sidebar.text_area("Introduceți promptul inițial despre licitație:", height=150, key="initial_prompt")
-    st.session_state.uploaded_file = st.sidebar.file_uploader("Încărcați un fișier pentru această sesiune (opțional)", type=["txt", "pdf"])
+    initial_prompt = st.sidebar.text_area("Introduceți promptul inițial despre licitație:", height=150, key="initial_prompt")
+    uploaded_file = st.sidebar.file_uploader("Încărcați un fișier pentru această sesiune (opțional)", type=["txt", "pdf"])
 
     # Knowledge Base Section
     st.sidebar.markdown('<p class="futuristic-input">Baza de Cunoștințe</p>', unsafe_allow_html=True)
@@ -26,6 +25,8 @@ def setup_ui():
             delete_from_knowledge_base(file, KNOWLEDGE_BASE_DIR)
             st.sidebar.success(f"S-a șters {file} din Baza de Cunoștințe")
             st.experimental_rerun()
+
+    return initial_prompt, uploaded_file
 
 def display_result(result):
     st.markdown('<p class="futuristic-title">Rezultatul Procesării</p>', unsafe_allow_html=True)

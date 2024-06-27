@@ -9,19 +9,19 @@ load_dotenv()
 
 def main():
     st.set_page_config(page_title="Procesor de Documente pentru Licitații", layout="wide")
-    setup_ui()
+    initial_prompt, uploaded_file = setup_ui()
 
     if st.sidebar.button("Procesează", key="process"):
-        if not st.session_state.initial_prompt:
+        if not initial_prompt:
             st.error("Vă rugăm să introduceți un prompt inițial.")
         else:
             with st.spinner("Se procesează..."):
                 try:
                     manager, crew = create_agents_and_crew()
-                    input_data = st.session_state.initial_prompt
+                    input_data = initial_prompt
                     file_summary = ""
-                    if st.session_state.uploaded_file:
-                        _, file_summary = process_file(st.session_state.uploaded_file)
+                    if uploaded_file:
+                        _, file_summary = process_file(uploaded_file)
                         input_data += f"\n\nUn fișier a fost încărcat. Iată un rezumat al conținutului său: {file_summary}"
 
                     knowledge_base_used = len(get_knowledge_base_files(KNOWLEDGE_BASE_DIR)) > 0
