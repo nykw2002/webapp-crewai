@@ -26,7 +26,31 @@ def setup_ui():
             st.sidebar.success(f"S-a șters {file} din Baza de Cunoștințe")
             st.experimental_rerun()
 
-    return initial_prompt, uploaded_file
+    # Agent customization
+    st.sidebar.markdown('<p class="futuristic-input">Personalizare Agenți</p>', unsafe_allow_html=True)
+    agent_configs = {}
+    agent_names = ["Manager", "Cercetător", "Scriitor", "Analist", "Expert Financiar"]
+    for agent_name in agent_names:
+        with st.sidebar.expander(f"Configurare {agent_name}"):
+            instructions = st.text_area(
+                f"Instrucțiuni {agent_name}", 
+                value=st.session_state.get(f"{agent_name}_instructions", ""),
+                key=f"{agent_name}_instructions"
+            )
+            backstory = st.text_area(
+                f"Povestea {agent_name}", 
+                value=st.session_state.get(f"{agent_name}_backstory", ""),
+                key=f"{agent_name}_backstory"
+            )
+            agent_configs[agent_name] = {"instructions": instructions, "backstory": backstory}
+
+    if st.sidebar.button("Salvează Configurările Agenților", key="save_config"):
+        for name, config in agent_configs.items():
+            st.session_state[f"{name}_instructions"] = config["instructions"]
+            st.session_state[f"{name}_backstory"] = config["backstory"]
+        st.sidebar.success("Configurările au fost salvate cu succes!")
+
+    return initial_prompt, uploaded_file, agent_configs
 
 def display_result(result):
     st.markdown('<p class="futuristic-title">Rezultatul Procesării</p>', unsafe_allow_html=True)

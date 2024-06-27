@@ -1,17 +1,17 @@
 from typing import List
 import os
-import requests
-from langchain.chat_models import ChatOpenAI as OpenAI
-from langchain.prompts import PromptTemplate
 import json
-
+import requests
+from langchain.chat_models import ChatOpenAI
+from langchain.prompts import ChatPromptTemplate
+from langchain.schema import HumanMessage, AIMessage
 
 class Agent:
     def __init__(self, name: str, instructions: str, backstory: str):
         self.name = name
         self.instructions = instructions
         self.backstory = backstory
-        self.llm = OpenAI(model_name="gpt-3.5-turbo", temperature=0.7, openai_api_key=os.getenv("OPENAI_API_KEY"))
+        self.llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0.7, openai_api_key=os.getenv("OPENAI_API_KEY"))
 
     def search_internet(self, query: str) -> str:
         url = "https://google.serper.dev/search"
@@ -24,24 +24,29 @@ class Agent:
         return response.text
 
     def process(self, input_data: str, knowledge_base_used: bool = False, file_summary: str = "") -> str:
-        prompt = PromptTemplate(
-            input_variables=["instructions", "backstory", "input_data", "file_summary"],
-            template="Instrucțiuni: {instructions}\nPovestea personajului: {backstory}\nSarcină: {input_data}\nRezumatul fișierului: {file_summary}\nAnalizați informațiile furnizate și oferiți perspective. Folosiți căutarea pe internet dacă este necesar. Răspundeți în limba română.\nRăspuns:"
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", "Instrucțiuni: {instructions}\nPovestea personajului: {backstory}"),
+            ("human", "Sarcină: {input_data}\nRezumatul fișierului: {file_summary}\nAnalizați informațiile furnizate și oferiți perspective. Folosiți căutarea pe internet dacă este necesar. Răspundeți în limba română.")
+        ])
+        messages = prompt.format_messages(
+            instructions=self.instructions,
+            backstory=self.backstory,
+            input_data=input_data,
+            file_summary=file_summary
         )
-        chain = prompt | self.llm
-        result = chain.invoke({
-            "instructions": self.instructions,
-            "backstory": self.backstory,
-            "input_data": input_data,
-            "file_summary": file_summary
-        })
+        result = self.llm(messages)
         
+        if isinstance(result, AIMessage):
+            result_text = result.content
+        else:
+            result_text = str(result)
+
         internet_used = False
-        if "căutați pe internet" in result.lower():
+        if "căutați pe internet" in result_text.lower():
             internet_used = True
-            search_query = result.split("căutați pe internet pentru ")[-1].split(".")[0]
+            search_query = result_text.split("căutați pe internet pentru ")[-1].split(".")[0]
             search_result = self.search_internet(search_query)
-            result += f"\n\nRezultatele căutării pe internet: {search_result}"
+            result_text += f"\n\nRezultatele căutării pe internet: {search_result}"
         
         prefix = []
         if knowledge_base_used:
@@ -52,7 +57,7 @@ class Agent:
             prefix.append("[S-a analizat fișierul încărcat]")
         
         prefix_str = " ".join(prefix) + " " if prefix else ""
-        final_result = f"{prefix_str}Sarcină completată. Răspuns: {result}"
+        final_result = f"{prefix_str}Sarcină completată. Răspuns: {result_text}"
         return final_result
 
 class Manager(Agent):
@@ -83,17 +88,17 @@ class Crew:
     def process(self, input_data: str, knowledge_base_used: bool, file_summary: str) -> str:
         return self.manager.delegate(self.agents, input_data, knowledge_base_used, file_summary)
 
-def create_agents_and_crew():
+def create_agents_and_crew(agent_configs):
     manager = Manager(
         "Manager",
-        "Coordonați echipa și oferiți o analiză finală bazată pe contribuțiile tuturor agenților.",
-        "Sunteți un manager experimentat în domeniul licitațiilor, cu o vastă experiență în coordonarea echipelor multidisciplinare."
+        agent_configs["Manager"]["instructions"],
+        agent_configs["Manager"]["backstory"]
     )
     agents = [
-        Agent("Cercetător", "Cercetați și furnizați informații detaliate despre aspectele tehnice ale licitațiilor.", "Sunteți un expert în cercetarea și analiza informațiilor despre licitații."),
-        Agent("Scriitor", "Creați conținut clar și convingător pentru documentele licitației.", "Sunteți un scriitor talentat cu experiență în redactarea documentelor pentru licitații."),
-        Agent("Analist", "Analizați datele și tendințele pieței relevante pentru licitație.", "Sunteți un analist de date cu experiență în interpretarea informațiilor de piață pentru licitații."),
-        Agent("Expert Financiar", "Oferiți analize și sfaturi financiare legate de licitație.", "Sunteți un expert financiar cu o vastă experiență în aspectele economice ale licitațiilor.")
+        Agent("Cercetător", agent_configs["Cercetător"]["instructions"], agent_configs["Cercetător"]["backstory"]),
+        Agent("Scriitor", agent_configs["Scriitor"]["instructions"], agent_configs["Scriitor"]["backstory"]),
+        Agent("Analist", agent_configs["Analist"]["instructions"], agent_configs["Analist"]["backstory"]),
+        Agent("Expert Financiar", agent_configs["Expert Financiar"]["instructions"], agent_configs["Expert Financiar"]["backstory"])
     ]
     crew = Crew(manager, agents)
     return manager, crew

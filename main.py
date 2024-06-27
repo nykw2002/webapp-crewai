@@ -9,7 +9,7 @@ load_dotenv()
 
 def main():
     st.set_page_config(page_title="Procesor de Documente pentru Licitații", layout="wide")
-    initial_prompt, uploaded_file = setup_ui()
+    initial_prompt, uploaded_file, agent_configs = setup_ui()
 
     if st.sidebar.button("Procesează", key="process"):
         if not initial_prompt:
@@ -17,7 +17,7 @@ def main():
         else:
             with st.spinner("Se procesează..."):
                 try:
-                    manager, crew = create_agents_and_crew()
+                    manager, crew = create_agents_and_crew(agent_configs)
                     input_data = initial_prompt
                     file_summary = ""
                     if uploaded_file:
