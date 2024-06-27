@@ -36,12 +36,14 @@ def setup_ui():
             instructions = st.text_area(
                 f"Instrucțiuni {agent_name}", 
                 value=st.session_state.get(f"{agent_name}_instructions", ""),
-                key=f"{agent_name}_instructions"
+                key=f"{agent_name}_instructions",
+                max_chars=500  # Limit the length of instructions
             )
             backstory = st.text_area(
                 f"Povestea {agent_name}", 
                 value=st.session_state.get(f"{agent_name}_backstory", ""),
-                key=f"{agent_name}_backstory"
+                key=f"{agent_name}_backstory",
+                max_chars=500  # Limit the length of backstory
             )
             agent_configs[agent_name] = {"instructions": instructions, "backstory": backstory}
 
@@ -49,11 +51,10 @@ def setup_ui():
 
     if save_config:
         for name, config in agent_configs.items():
-            st.session_state[f"{name}_instructions"] = config["instructions"]
-            st.session_state[f"{name}_backstory"] = config["backstory"]
+            # Sanitize and truncate the input before storing
+            st.session_state[f"{name}_instructions"] = config["instructions"][:500].encode('ascii', 'ignore').decode()
+            st.session_state[f"{name}_backstory"] = config["backstory"][:500].encode('ascii', 'ignore').decode()
         st.sidebar.success("Configurările au fost salvate cu succes!")
-
-    return initial_prompt, uploaded_file, agent_configs, save_config
 
 def display_result(result):
     st.markdown('<p class="futuristic-title">Rezultatul Procesării</p>', unsafe_allow_html=True)
