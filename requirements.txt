@@ -1,0 +1,7 @@
+streamlit
+langchain
+openai
+PyPDF2
+python-dotenv
+chardet
+crewai-tools
