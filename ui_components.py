@@ -3,6 +3,7 @@ from utils import save_to_knowledge_base, delete_from_knowledge_base, get_knowle
 from config import KNOWLEDGE_BASE_DIR
 
 def setup_ui():
+    load_custom_css()
     st.sidebar.markdown('<h1 class="futuristic-title">Procesor de Documente pentru Licitații</h1>', unsafe_allow_html=True)
     
     initial_prompt = st.sidebar.text_area("Introduceți promptul inițial despre licitație:", height=150, key="initial_prompt")
@@ -45,6 +46,13 @@ def setup_ui():
             agent_configs[agent_name] = {"instructions": instructions, "backstory": backstory}
 
     save_config = st.sidebar.button("Salvează Configurările Agenților", key="save_config")
+
+    if save_config:
+        for name, config in agent_configs.items():
+            st.session_state[f"{name}_instructions"] = config["instructions"]
+            st.session_state[f"{name}_backstory"] = config["backstory"]
+        st.sidebar.success("Configurările au fost salvate cu succes!")
+
     return initial_prompt, uploaded_file, agent_configs, save_config
 
 def display_result(result):

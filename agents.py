@@ -5,6 +5,8 @@ import requests
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema import HumanMessage, AIMessage
+import time
+import streamlit as st
 
 class Agent:
     def __init__(self, name: str, instructions: str, backstory: str):
@@ -13,17 +15,26 @@ class Agent:
         self.backstory = backstory
         self.llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0.7, openai_api_key=os.getenv("OPENAI_API_KEY"))
 
-    def search_internet(self, query: str) -> str:
-        url = "https://google.serper.dev/search"
-        payload = json.dumps({"q": query})
-        headers = {
-            'X-API-KEY': os.getenv("SERPER_API_KEY"),
-            'Content-Type': 'application/json'
-        }
-        response = requests.request("POST", url, headers=headers, data=payload)
-        return response.text
+    def display_message(self, message: str, is_thinking=False):
+        agent_class = self.name.lower().replace(' ', '-')
+        text_color = "black" if agent_class in ["writer", "analyst", "financial-expert"] else "white"
+        
+        message_html = f"""
+        <div class="message {agent_class}">
+            <div class="agent-name" style="color: {text_color};">{self.name}</div>
+            <div class="message-content" style="color: {text_color};">
+                {"Thinking<span class='typing-animation'>...</span>" if is_thinking else message}
+            </div>
+        </div>
+        """
+        st.markdown(message_html, unsafe_allow_html=True)
+        
+        if is_thinking:
+            time.sleep(2)  # Simulate thinking time
 
     def process(self, input_data: str, knowledge_base_used: bool = False, file_summary: str = "") -> str:
+        self.display_message("Processing task...", is_thinking=True)
+        
         prompt = ChatPromptTemplate.from_messages([
             ("system", "Instrucțiuni: {instructions}\nPovestea personajului: {backstory}"),
             ("human", "Sarcină: {input_data}\nRezumatul fișierului: {file_summary}\nAnalizați informațiile furnizate și oferiți perspective. Folosiți căutarea pe internet dacă este necesar. Răspundeți în limba română.")
@@ -44,6 +55,7 @@ class Agent:
         internet_used = False
         if "căutați pe internet" in result_text.lower():
             internet_used = True
+            self.display_message("Searching the internet...", is_thinking=True)
             search_query = result_text.split("căutați pe internet pentru ")[-1].split(".")[0]
             search_result = self.search_internet(search_query)
             result_text += f"\n\nRezultatele căutării pe internet: {search_result}"
@@ -58,15 +70,22 @@ class Agent:
         
         prefix_str = " ".join(prefix) + " " if prefix else ""
         final_result = f"{prefix_str}Sarcină completată. Răspuns: {result_text}"
+        self.display_message(final_result)
         return final_result
 
 class Manager(Agent):
     def delegate(self, crew: List[Agent], input_data: str, knowledge_base_used: bool, file_summary: str) -> str:
+        self.display_message(f"Delegating task: {input_data}")
+
         crew_output = []
         for agent in crew:
+            self.display_message(f"Assigning task to {agent.name}...", is_thinking=True)
+            self.display_message(f"Instructions for {agent.name}: Analyze the following task from your perspective and provide insights. Use internet search if necessary.\nTask: {input_data}")
             agent_output = agent.process(input_data, knowledge_base_used, file_summary)
             crew_output.append(f"{agent.name}: {agent_output}")
+            self.display_message(f"Received output from {agent.name}")
 
+        self.display_message("Reviewing crew outputs and providing final analysis...", is_thinking=True)
         final_prompt = f"""
         Ca Manager, revizuiți următoarele rezultate ale echipei și oferiți o analiză finală și recomandări:
 
