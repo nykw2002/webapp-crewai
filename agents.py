@@ -1,8 +1,10 @@
 from typing import List
 import os
+import requests
 from langchain.chat_models import ChatOpenAI as OpenAI
 from langchain.prompts import PromptTemplate
-from crewai_tools import SerperDevTool
+import json
+
 
 class Agent:
     def __init__(self, name: str, instructions: str, backstory: str):
@@ -10,7 +12,16 @@ class Agent:
         self.instructions = instructions
         self.backstory = backstory
         self.llm = OpenAI(model_name="gpt-3.5-turbo", temperature=0.7, openai_api_key=os.getenv("OPENAI_API_KEY"))
-        self.serper_tool = SerperDevTool()
+
+    def search_internet(self, query: str) -> str:
+        url = "https://google.serper.dev/search"
+        payload = json.dumps({"q": query})
+        headers = {
+            'X-API-KEY': os.getenv("SERPER_API_KEY"),
+            'Content-Type': 'application/json'
+        }
+        response = requests.request("POST", url, headers=headers, data=payload)
+        return response.text
 
     def process(self, input_data: str, knowledge_base_used: bool = False, file_summary: str = "") -> str:
         prompt = PromptTemplate(
@@ -29,7 +40,7 @@ class Agent:
         if "căutați pe internet" in result.lower():
             internet_used = True
             search_query = result.split("căutați pe internet pentru ")[-1].split(".")[0]
-            search_result = self.serper_tool.search(search_query)
+            search_result = self.search_internet(search_query)
             result += f"\n\nRezultatele căutării pe internet: {search_result}"
         
         prefix = []
