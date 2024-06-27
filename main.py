@@ -9,7 +9,13 @@ load_dotenv()
 
 def main():
     st.set_page_config(page_title="Procesor de Documente pentru Licitații", layout="wide")
-    load_custom_css()
+
+    st.write("Debug: About to call setup_ui()")
+    setup_ui_result = setup_ui()
+    st.write(f"Debug: setup_ui() returned: {setup_ui_result}")
+    
+    initial_prompt, uploaded_file, agent_configs, save_config = setup_ui_result
+    st.write(f"Debug: Unpacked values - initial_prompt: {initial_prompt}, uploaded_file: {uploaded_file}, agent_configs: {agent_configs}, save_config: {save_config}")
     
     initial_prompt, uploaded_file, agent_configs, save_config = setup_ui()
 

@@ -56,6 +56,8 @@ def setup_ui():
             st.session_state[f"{name}_backstory"] = config["backstory"][:500].encode('ascii', 'ignore').decode()
         st.sidebar.success("Configurările au fost salvate cu succes!")
 
+    return initial_prompt, uploaded_file, agent_configs, save_config
+
 def display_result(result):
     st.markdown('<p class="futuristic-title">Rezultatul Procesării</p>', unsafe_allow_html=True)
     st.write(result)
