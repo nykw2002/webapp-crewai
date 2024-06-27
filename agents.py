@@ -1,6 +1,6 @@
 from typing import List
 import os
-from langchain_openai import OpenAI
+from langchain.chat_models import ChatOpenAI as OpenAI
 from langchain.prompts import PromptTemplate
 from crewai_tools import SerperDevTool
 
@@ -9,7 +9,7 @@ class Agent:
         self.name = name
         self.instructions = instructions
         self.backstory = backstory
-        self.llm = OpenAI(temperature=0.7, api_key=os.getenv("OPENAI_API_KEY"))
+        self.llm = OpenAI(model_name="gpt-3.5-turbo", temperature=0.7, openai_api_key=os.getenv("OPENAI_API_KEY"))
         self.serper_tool = SerperDevTool()
 
     def process(self, input_data: str, knowledge_base_used: bool = False, file_summary: str = "") -> str:
