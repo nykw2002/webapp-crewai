@@ -6,12 +6,12 @@ def setup_ui():
     load_custom_css()
     st.sidebar.markdown('<h1 class="futuristic-title">Procesor de Documente pentru Licitații</h1>', unsafe_allow_html=True)
     
-    initial_prompt = st.sidebar.text_area("Introduceți promptul inițial despre licitație:", height=150, key="initial_prompt")
-    uploaded_file = st.sidebar.file_uploader("Încărcați un fișier pentru această sesiune (opțional)", type=["txt", "pdf"])
+    initial_prompt = st.sidebar.text_area("Introduceți promptul inițial despre licitație:", height=150, key="initial_prompt_input")
+    uploaded_file = st.sidebar.file_uploader("Încărcați un fișier pentru această sesiune (opțional)", type=["txt", "pdf"], key="file_uploader")
 
     # Knowledge Base Section
     st.sidebar.markdown('<p class="futuristic-input">Baza de Cunoștințe</p>', unsafe_allow_html=True)
-    kb_files = st.sidebar.file_uploader("Încărcați fișiere în Baza de Cunoștințe", accept_multiple_files=True)
+    kb_files = st.sidebar.file_uploader("Încărcați fișiere în Baza de Cunoștințe", accept_multiple_files=True, key="kb_files_uploader")
     if kb_files:
         for file in kb_files:
             save_to_knowledge_base(file, KNOWLEDGE_BASE_DIR)
@@ -19,10 +19,10 @@ def setup_ui():
 
     # Display and manage Knowledge Base files
     st.sidebar.markdown("### Fișiere curente în Baza de Cunoștințe")
-    for file in get_knowledge_base_files(KNOWLEDGE_BASE_DIR):
+    for idx, file in enumerate(get_knowledge_base_files(KNOWLEDGE_BASE_DIR)):
         col1, col2 = st.sidebar.columns([3, 1])
         col1.write(file)
-        if col2.button("Șterge", key=f"delete_{file}"):
+        if col2.button("Șterge", key=f"delete_button_{idx}"):
             delete_from_knowledge_base(file, KNOWLEDGE_BASE_DIR)
             st.sidebar.success(f"S-a șters {file} din Baza de Cunoștințe")
             st.experimental_rerun()
@@ -36,18 +36,18 @@ def setup_ui():
             instructions = st.text_area(
                 f"Instrucțiuni {agent_name}", 
                 value=st.session_state.get(f"{agent_name}_instructions", ""),
-                key=f"{agent_name}_instructions",
+                key=f"{agent_name}_instructions_input",
                 max_chars=500  # Limit the length of instructions
             )
             backstory = st.text_area(
                 f"Povestea {agent_name}", 
                 value=st.session_state.get(f"{agent_name}_backstory", ""),
-                key=f"{agent_name}_backstory",
+                key=f"{agent_name}_backstory_input",
                 max_chars=500  # Limit the length of backstory
             )
             agent_configs[agent_name] = {"instructions": instructions, "backstory": backstory}
 
-    save_config = st.sidebar.button("Salvează Configurările Agenților", key="save_config")
+    save_config = st.sidebar.button("Salvează Configurările Agenților", key="save_config_button")
 
     if save_config:
         for name, config in agent_configs.items():
